@@ -1,0 +1,14 @@
+[package]
+name = "screen-guardian-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+chrono.workspace = true
+clap.workspace = true
+tabled.workspace = true
+screen-guardian-core = { path = "../../crates/screen-guardian-core" }
+
