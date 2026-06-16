@@ -46,17 +46,31 @@ impl AffinityOrchestrator {
                 return self.apply_native(hwnd, affinity);
             }
 
+            // Check if process has user32.dll (GUI capability)
+            if !crate::inject::has_user32(pid) {
+                log_affinity(&format!(
+                    "skip: pid={} has no user32.dll (non-GUI process)",
+                    pid
+                ));
+                return Ok(()); // Skip non-GUI processes silently
+            }
+
             log_affinity(&format!(
                 "inject_set_affinity: pid={}, hwnd={:#x}, affinity={}",
                 pid, hwnd, affinity as u32
             ));
 
-            // Shellcode injection - no DLL files needed
-            crate::inject::inject_set_affinity(pid, hwnd, affinity as u32)
-                .map_err(|e| {
-                    log_affinity(&format!("inject failed: {}", e));
-                    e
-                })
+            // Try shellcode injection
+            match crate::inject::inject_set_affinity(pid, hwnd, affinity as u32) {
+                Ok(()) => {
+                    log_affinity(&format!("inject success: pid={}", pid));
+                    Ok(())
+                }
+                Err(e) => {
+                    log_affinity(&format!("inject failed: pid={}, error={}", pid, e));
+                    Err(e)
+                }
+            }
         }
 
         #[cfg(not(windows))]

@@ -272,8 +272,49 @@ fn find_user32_base(target_pid: u32) -> anyhow::Result<usize> {
     }
 }
 
+/// Check if a process has user32.dll loaded (has GUI capability)
+pub fn has_user32(target_pid: u32) -> bool {
+    let wide_dll: Vec<u16> = std::ffi::OsStr::new("user32.dll")
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect();
+
+    unsafe {
+        let snapshot = match CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, target_pid) {
+            Ok(s) => s,
+            Err(_) => return false,
+        };
+        let _sg = HandleGuard(snapshot);
+
+        let mut module_entry = MODULEENTRY32W {
+            dwSize: std::mem::size_of::<MODULEENTRY32W>() as u32,
+            ..std::mem::zeroed()
+        };
+
+        if Module32FirstW(snapshot, &mut module_entry).is_ok() {
+            loop {
+                let entry_name = &module_entry.szModule;
+                let name_len = entry_name.iter().position(|&c| c == 0).unwrap_or(entry_name.len());
+                if &entry_name[..name_len] == &wide_dll[..wide_dll.len()-1] {
+                    return true;
+                }
+                if Module32NextW(snapshot, &mut module_entry).is_err() {
+                    break;
+                }
+            }
+        }
+
+        false
+    }
+}
+
 /// Inject shellcode to call SetWindowDisplayAffinity in a remote process
 pub fn inject_set_affinity(target_pid: u32, hwnd: isize, affinity: u32) -> anyhow::Result<()> {
+    // Check if process has user32.dll loaded
+    if !has_user32(target_pid) {
+        bail!("user32.dll not found in target process modules (PID={})", target_pid);
+    }
+
     let is_x86 = matches!(
         detect_process_architecture(target_pid)?,
         ProcessArchitecture::X86

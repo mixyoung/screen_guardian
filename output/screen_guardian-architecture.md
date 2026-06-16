@@ -212,7 +212,156 @@ impl AppConfig {
 }
 ```
 
-### 3.6 GUI — Tauri IPC 命令
+### 3.6 affinity.rs — 分层保护架构
+
+```rust
+/// 保护方法枚举
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ProtectionMethod {
+    HookEx,          // SetWindowsHookEx + DLL（优先）
+    Shellcode,       // Shellcode 注入（回退）
+    DllInjection,    // DLL 注入（最终回退）
+}
+
+/// 保护结果
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProtectionResult {
+    pub method: ProtectionMethod,
+    pub success: bool,
+    pub error: Option<String>,
+    pub timestamp: chrono::DateTime<chrono::Local>,
+}
+
+/// 分层保护协调器
+pub struct AffinityOrchestrator {
+    config: ProtectionConfig,
+    hook_ex_available: bool,      // HookEx 是否可用
+    dll_injection_available: bool, // DLL 注入是否可用
+}
+
+/// 保护配置
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ProtectionConfig {
+    pub enable_hook_ex: bool,         // 启用 Layer 1
+    pub enable_shellcode: bool,       // 启用 Layer 2
+    pub enable_dll_injection: bool,   // 启用 Layer 3
+    pub fallback_timeout_ms: u64,     // 回退超时时间
+    pub preferred_method: Option<ProtectionMethod>, // 首选方法
+}
+
+impl AffinityOrchestrator {
+    pub fn new(config: ProtectionConfig) -> Self;
+
+    /// 分层保护：自动回退
+    pub fn apply_with_fallback(
+        &self,
+        hwnd: isize,
+        pid: u32,
+        affinity: AffinityValue,
+    ) -> anyhow::Result<ProtectionResult>;
+
+    /// Layer 1: SetWindowsHookEx + DLL
+    fn apply_with_hook_ex(
+        &self,
+        hwnd: isize,
+        pid: u32,
+        affinity: AffinityValue,
+    ) -> anyhow::Result<()>;
+
+    /// Layer 2: Shellcode 注入
+    fn apply_with_shellcode(
+        &self,
+        hwnd: isize,
+        pid: u32,
+        affinity: AffinityValue,
+    ) -> anyhow::Result<()>;
+
+    /// Layer 3: DLL 注入
+    fn apply_with_dll_injection(
+        &self,
+        hwnd: isize,
+        pid: u32,
+        affinity: AffinityValue,
+    ) -> anyhow::Result<()>;
+
+    /// 获取保护方法统计
+    pub fn get_stats(&self) -> ProtectionStats;
+}
+
+/// 保护统计信息
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ProtectionStats {
+    pub hook_ex_count: u32,
+    pub shellcode_count: u32,
+    pub dll_injection_count: u32,
+    pub failure_count: u32,
+}
+```
+
+### 3.7 gpu_protection.rs — GPU 截图防护
+
+```rust
+/// GPU 截屏技术类型
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum GpuCaptureType {
+    Gdi,                    // BitBlt, GetDIBits
+    Dxgi,                   // Desktop Duplication API
+    WindowsGraphicsCapture, // Windows 官方新 API
+    GameCapture,            // Direct3D/Vulkan Hook
+}
+
+/// GPU 保护方法
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum GpuProtectionMethod {
+    DxgiPresentHook,        // Hook DXGI Present
+    D3dPresentHook,         // Hook Direct3D Present
+    WgcProtection,          // Windows Graphics Capture 保护
+    OverlayProtection,      // 覆盖层保护
+}
+
+/// GPU 保护配置
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GpuProtectionConfig {
+    pub enable_dxgi_hook: bool,
+    pub enable_d3d_hook: bool,
+    pub enable_wgc_protection: bool,
+    pub enable_overlay: bool,
+    pub protection_level: GpuProtectionLevel,
+}
+
+/// GPU 保护级别
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum GpuProtectionLevel {
+    Basic,    // 仅 GDI 保护
+    Standard, // GDI + DXGI
+    Advanced, // GDI + DXGI + D3D
+    Maximum,  // 所有保护（性能影响大）
+}
+
+/// GPU 保护管理器
+pub struct GpuProtectionManager {
+    config: GpuProtectionConfig,
+    active_hooks: Vec<GpuProtectionMethod>,
+}
+
+impl GpuProtectionManager {
+    pub fn new(config: GpuProtectionConfig) -> Self;
+
+    /// 启用 GPU 保护
+    pub fn enable(&mut self) -> anyhow::Result<()>;
+
+    /// 禁用 GPU 保护
+    pub fn disable(&mut self) -> anyhow::Result<()>;
+
+    /// 获取活跃的保护方法
+    pub fn get_active_methods(&self) -> &[GpuProtectionMethod];
+
+    /// 检测截屏技术类型
+    pub fn detect_capture_type(&self, process_name: &str) -> Option<GpuCaptureType>;
+}
+```
+
+### 3.8 GUI — Tauri IPC 命令
 
 ```rust
 // 窗口管理

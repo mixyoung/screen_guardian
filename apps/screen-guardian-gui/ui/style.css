@@ -881,31 +881,5 @@ select.form-input {
   color: var(--color-border);
   margin: 0 2px;
 }
-
-/* Update .app to use flex column for status bar */
-.app {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-}
-
-.app > .sidebar,
-.app > .content {
-  display: flex;
-}
-
-.app {
-  flex-direction: row;
-  flex-wrap: wrap;
-}
-
-.app > .sidebar {
-  height: calc(100vh - 36px);
-}
-
-.app > .content {
-  height: calc(100vh - 36px);
-  flex: 1;
 }
 
