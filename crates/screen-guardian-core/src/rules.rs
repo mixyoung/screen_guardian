@@ -197,7 +197,7 @@ impl RuleEngine {
 
     pub fn apply_to_windows(
         &self,
-        orchestrator: &AffinityOrchestrator,
+        orchestrator: &mut AffinityOrchestrator,
         store: &mut PolicyStore,
     ) -> anyhow::Result<Vec<ApplyResult>> {
         let windows = enumerate_windows()?;
@@ -207,26 +207,32 @@ impl RuleEngine {
             if let Some(rule) = self.match_window(&win.app_name) {
                 let affinity = AffinityValue::from_bool(rule.protect);
                 if win.is_protected != rule.protect {
-                    orchestrator.apply(win.hwnd, win.pid, affinity)?;
+                    match orchestrator.apply(win.hwnd, win.pid, affinity) {
+                        Ok(_result) => {
+                            store.record(PolicyChange {
+                                timestamp: chrono::Utc::now(),
+                                hwnd: win.hwnd,
+                                pid: win.pid,
+                                title: win.title.clone(),
+                                executable_path: win.executable_path.clone(),
+                                previous_protected: win.is_protected,
+                                current_protected: rule.protect,
+                                actor: format!("rule:{}", rule.id),
+                            });
 
-                    store.record(PolicyChange {
-                        timestamp: chrono::Utc::now(),
-                        hwnd: win.hwnd,
-                        pid: win.pid,
-                        title: win.title.clone(),
-                        executable_path: win.executable_path.clone(),
-                        previous_protected: win.is_protected,
-                        current_protected: rule.protect,
-                        actor: format!("rule:{}", rule.id),
-                    });
-
-                    results.push(ApplyResult {
-                        hwnd: win.hwnd,
-                        pid: win.pid,
-                        title: win.title,
-                        rule_id: rule.id.clone(),
-                        protect: rule.protect,
-                    });
+                            results.push(ApplyResult {
+                                hwnd: win.hwnd,
+                                pid: win.pid,
+                                title: win.title,
+                                rule_id: rule.id.clone(),
+                                protect: rule.protect,
+                            });
+                        }
+                        Err(e) => {
+                            // Log error but continue with other windows
+                            eprintln!("[rules] failed to apply rule '{}' to window {}: {}", rule.id, win.hwnd, e);
+                        }
+                    }
                 }
             }
         }

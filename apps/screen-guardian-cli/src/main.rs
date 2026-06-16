@@ -196,7 +196,7 @@ fn main() -> anyhow::Result<()> {
             protect,
             actor,
         } => {
-            let orchestrator = AffinityOrchestrator::new(&config.helper_path);
+            let mut orchestrator = AffinityOrchestrator::new(&config.helper_path);
             let mut store = PolicyStore::load(&config.policy_path)?;
             let windows = enumerate_windows()?;
             let current = windows
@@ -204,7 +204,14 @@ fn main() -> anyhow::Result<()> {
                 .find(|w| w.hwnd == hwnd)
                 .with_context(|| format!("hwnd {hwnd} not found"))?;
 
-            orchestrator.apply(hwnd, pid, AffinityValue::from_bool(protect))?;
+            match orchestrator.apply(hwnd, pid, AffinityValue::from_bool(protect)) {
+                Ok(result) => {
+                    println!("protected using method: {}", result.method);
+                }
+                Err(e) => {
+                    eprintln!("protection failed: {}", e);
+                }
+            }
 
             store.record(PolicyChange {
                 timestamp: Utc::now(),

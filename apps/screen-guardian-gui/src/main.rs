@@ -24,6 +24,7 @@ struct AppState {
     config: Mutex<AppConfig>,
     daemon: Mutex<Daemon>,
     rule_engine: Mutex<RuleEngine>,
+    orchestrator: Mutex<screen_guardian_core::AffinityOrchestrator>,
     monitor_running: Mutex<bool>,
     threat_snapshot: Mutex<ThreatSnapshot>,
     threat_monitor_running: Mutex<bool>,
@@ -49,18 +50,19 @@ fn set_protection(
     protect: bool,
 ) -> Result<(), String> {
     gui_log(&format!("set_protection called: hwnd={}, pid={}, protect={}", hwnd, pid, protect));
-    let config = state.config.lock().map_err(|e| e.to_string())?;
-    let orchestrator = screen_guardian_core::AffinityOrchestrator::new(&config.helper_path);
+    let mut orchestrator = state.orchestrator.lock().map_err(|e| e.to_string())?;
     let affinity = screen_guardian_core::AffinityValue::from_bool(protect);
     gui_log(&format!("set_protection affinity={:?}", affinity));
-    orchestrator
-        .apply(hwnd, pid, affinity)
-        .map_err(|e| {
+    match orchestrator.apply(hwnd, pid, affinity) {
+        Ok(result) => {
+            gui_log(&format!("set_protection ok: method={}", result.method));
+            Ok(())
+        }
+        Err(e) => {
             gui_log(&format!("set_protection error: {}", e));
-            e.to_string()
-        })?;
-    gui_log("set_protection ok");
-    Ok(())
+            Err(e.to_string())
+        }
+    }
 }
 
 #[tauri::command]
@@ -212,9 +214,9 @@ fn start_monitor(_app: tauri::AppHandle, state: tauri::State<AppState>) -> Resul
                     // Load rules and apply
                     let config = screen_guardian_core::AppConfig::load("./data/config.json").unwrap_or_default();
                     if let Ok(engine) = screen_guardian_core::RuleEngine::load(&config.rules_path) {
-                        let orchestrator = screen_guardian_core::AffinityOrchestrator::new(&config.helper_path);
+                        let mut orchestrator = screen_guardian_core::AffinityOrchestrator::new(&config.helper_path);
                         if let Ok(mut store) = screen_guardian_core::PolicyStore::load(&config.policy_path) {
-                            match engine.apply_to_windows(&orchestrator, &mut store) {
+                            match engine.apply_to_windows(&mut orchestrator, &mut store) {
                                 Ok(results) => {
                                     gui_log(&format!("[monitor] applied {} changes", results.len()));
                                 }
@@ -370,6 +372,7 @@ fn main() {
         })
     });
     let daemon = Daemon::new(config.clone()).unwrap();
+    let orchestrator = screen_guardian_core::AffinityOrchestrator::new(&config.helper_path);
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -377,6 +380,7 @@ fn main() {
             config: Mutex::new(config),
             daemon: Mutex::new(daemon),
             rule_engine: Mutex::new(rule_engine),
+            orchestrator: Mutex::new(orchestrator),
             monitor_running: Mutex::new(false),
             threat_snapshot: Mutex::new(ThreatSnapshot {
                 detected: Vec::new(),

@@ -42,7 +42,7 @@ impl Daemon {
     pub fn tick(&mut self) -> anyhow::Result<()> {
         let results = self
             .rule_engine
-            .apply_to_windows(&self.orchestrator, &mut self.store)?;
+            .apply_to_windows(&mut self.orchestrator, &mut self.store)?;
 
         for r in &results {
             if r.protect {
