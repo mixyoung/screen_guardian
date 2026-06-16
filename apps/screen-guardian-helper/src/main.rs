@@ -18,9 +18,17 @@ fn main() -> anyhow::Result<()> {
 
 #[cfg(windows)]
 fn apply_affinity(hwnd: isize, affinity: u32) -> anyhow::Result<()> {
-    use windows::Win32::{Foundation::HWND, UI::WindowsAndMessaging::SetWindowDisplayAffinity};
+    use windows::Win32::{
+        Foundation::HWND,
+        UI::WindowsAndMessaging::{SetWindowDisplayAffinity, WINDOW_DISPLAY_AFFINITY},
+    };
 
-    unsafe { SetWindowDisplayAffinity(HWND(hwnd), affinity).ok()? };
+    unsafe {
+        let result = SetWindowDisplayAffinity(HWND(hwnd as *mut _), WINDOW_DISPLAY_AFFINITY(affinity));
+        if let Err(e) = result {
+            anyhow::bail!("SetWindowDisplayAffinity failed: {}", e);
+        }
+    }
     Ok(())
 }
 
