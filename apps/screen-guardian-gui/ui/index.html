@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>屏幕守护者</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <div class="app-main">
+    <nav class="sidebar">
+      <ul class="nav-list">
+        <li class="nav-item active" data-page="windows">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+          </svg>
+          <span>窗口列表</span>
+        </li>
+        <li class="nav-item" data-page="rules">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+          <span>规则管理</span>
+        </li>
+        <li class="nav-item" data-page="audit">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          <span>审计中心</span>
+        </li>
+        <li class="nav-item" data-page="threats">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span>威胁检测</span>
+        </li>
+        <li class="nav-item" data-page="logs">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+          </svg>
+          <span>日志</span>
+        </li>
+        <li class="nav-item" data-page="settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          <span>系统设置</span>
+        </li>
+        <li class="nav-item" data-page="about">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <span>关于</span>
+        </li>
+      </ul>
+    </nav>
+    <main class="content">
+      <!-- Windows Page -->
+      <div id="page-windows" class="page active">
+        <div class="page-header">
+          <h1>窗口列表</h1>
+          <div class="page-actions">
+            <input type="text" id="window-search" class="search-input" placeholder="搜索...">
+            <div class="auto-refresh-group">
+              <label class="toggle-sm" title="自动刷新">
+                <input type="checkbox" id="auto-refresh-toggle">
+                <span class="toggle-slider-sm"></span>
+              </label>
+              <span class="auto-refresh-label">自动刷新</span>
+              <select id="auto-refresh-interval" class="form-select-sm">
+                <option value="3000">3秒</option>
+                <option value="5000" selected>5秒</option>
+                <option value="10000">10秒</option>
+                <option value="30000">30秒</option>
+                <option value="60000">1分钟</option>
+              </select>
+            </div>
+            <button id="btn-refresh-windows" class="btn btn-secondary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
+              刷新
+            </button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table id="windows-table">
+            <thead>
+              <tr>
+                <th class="col-index">#</th>
+                <th class="col-name sortable" data-sort="app_name">进程名</th>
+                <th class="col-pid sortable" data-sort="pid">PID</th>
+                <th class="col-title">标题</th>
+                <th class="col-type">类型</th>
+                <th class="col-audit">审计</th>
+                <th class="col-status">截屏状态</th>
+              </tr>
+            </thead>
+            <tbody id="windows-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Rules Page -->
+      <div id="page-rules" class="page">
+        <div class="page-header">
+          <h1>规则管理</h1>
+          <div class="page-actions">
+            <button id="btn-add-group" class="btn btn-secondary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                <line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/>
+              </svg>
+              新建规则组
+            </button>
+            <button id="btn-add-rule" class="btn btn-primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              添加规则
+            </button>
+          </div>
+        </div>
+        <div class="rules-layout">
+          <!-- Left: Groups Panel -->
+          <div class="rules-groups-panel">
+            <div class="groups-header">规则组</div>
+            <ul id="groups-list" class="groups-list">
+              <!-- Groups will be rendered here -->
+            </ul>
+          </div>
+          <!-- Right: Rules Panel -->
+          <div class="rules-content-panel">
+            <div class="rules-content-header">
+              <span id="selected-group-name">选择规则组</span>
+              <span id="selected-group-count" class="badge badge-unprotected">0 条规则</span>
+            </div>
+            <div class="table-container">
+              <table id="rules-table">
+                <thead>
+                  <tr>
+                    <th class="col-index">#</th>
+                    <th class="col-name">名称</th>
+                    <th class="col-pattern">匹配模式</th>
+                    <th class="col-protect">保护</th>
+                    <th class="col-enabled">启用</th>
+                    <th class="col-priority">优先级</th>
+                    <th class="col-actions">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="rules-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Group Modal -->
+        <div id="group-modal" class="modal hidden">
+          <div class="modal-content">
+            <h2>新建规则组</h2>
+            <div class="form-group">
+              <label for="group-name">组名称</label>
+              <input type="text" id="group-name" class="form-input" placeholder="输入规则组名称">
+            </div>
+            <div class="form-group">
+              <label for="group-desc">描述</label>
+              <input type="text" id="group-desc" class="form-input" placeholder="简要描述此规则组的用途">
+            </div>
+            <div class="modal-actions">
+              <button id="btn-cancel-group" class="btn btn-secondary">取消</button>
+              <button id="btn-save-group" class="btn btn-primary">保存</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Rule Modal -->
+        <div id="rule-modal" class="modal hidden">
+          <div class="modal-content">
+            <h2>添加规则</h2>
+            <div class="form-group">
+              <label for="rule-name">规则名称</label>
+              <input type="text" id="rule-name" class="form-input" placeholder="输入规则名称">
+            </div>
+            <div class="form-group">
+              <label for="rule-pattern">进程匹配模式（正则表达式）</label>
+              <input type="text" id="rule-pattern" class="form-input" placeholder="例如: chrome.*">
+            </div>
+            <div class="form-group">
+              <label for="rule-protect">保护策略</label>
+              <select id="rule-protect" class="form-input">
+                <option value="true">启用保护</option>
+                <option value="false">禁用保护</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="rule-priority">优先级（数值越小优先级越高）</label>
+              <input type="number" id="rule-priority" class="form-input" value="100" min="1">
+            </div>
+            <div class="modal-actions">
+              <button id="btn-cancel-rule" class="btn btn-secondary">取消</button>
+              <button id="btn-save-rule" class="btn btn-primary">保存</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audit Page -->
+      <div id="page-audit" class="page">
+        <div class="page-header">
+          <h1>审计中心</h1>
+          <div class="page-actions">
+            <span id="monitor-status-badge" class="badge" style="font-size:13px;padding:4px 12px"></span>
+            <button id="btn-scan" class="btn btn-secondary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
+              立即扫描
+            </button>
+            <button id="btn-toggle-monitor" class="btn btn-primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              <span id="monitor-btn-text">启动监控</span>
+            </button>
+          </div>
+        </div>
+        <div class="status-cards">
+          <div class="card">
+            <div class="card-label">当前受保护窗口</div>
+            <div class="card-value" id="protected-count">0</div>
+          </div>
+          <div class="card">
+            <div class="card-label">活跃规则</div>
+            <div class="card-value" id="rule-count">0</div>
+          </div>
+          <div class="card">
+            <div class="card-label">累计保护变更</div>
+            <div class="card-value" id="total-changes">0</div>
+          </div>
+        </div>
+        <div class="page-header" style="margin-top:24px">
+          <h2>保护状态变更记录</h2>
+          <button id="btn-clear-history" class="btn btn-secondary btn-sm">清空记录</button>
+        </div>
+        <div class="table-container">
+          <table id="history-table">
+            <thead>
+              <tr>
+                <th>时间</th>
+                <th>进程名</th>
+                <th>PID</th>
+                <th>窗口标题</th>
+                <th>变更</th>
+                <th>来源</th>
+              </tr>
+            </thead>
+            <tbody id="history-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Threats Page -->
+      <div id="page-threats" class="page">
+        <div class="page-header">
+          <h1>威胁检测</h1>
+          <div class="page-actions">
+            <button id="btn-scan-threats" class="btn btn-secondary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
+              立即扫描
+            </button>
+            <label class="toggle-sm" title="自动检测（每秒扫描一次）">
+              <input type="checkbox" id="threat-monitor-toggle">
+              <span class="toggle-slider-sm"></span>
+            </label>
+            <span class="auto-refresh-label">自动检测</span>
+          </div>
+        </div>
+        <div class="status-cards" style="grid-template-columns: repeat(4, 1fr)">
+          <div class="card">
+            <div class="card-label">当前威胁</div>
+            <div class="card-value" id="threat-total" style="color: var(--color-danger)">0</div>
+          </div>
+          <div class="card">
+            <div class="card-label">系统截图工具</div>
+            <div class="card-value" id="threat-high" style="color: var(--color-danger)">0</div>
+          </div>
+          <div class="card">
+            <div class="card-label">第三方截录屏</div>
+            <div class="card-value" id="threat-high2" style="color: var(--color-warning)">0</div>
+          </div>
+          <div class="card">
+            <div class="card-label">远程/会议共享</div>
+            <div class="card-value" id="threat-medium" style="color: var(--color-info)">0</div>
+          </div>
+        </div>
+        <div class="page-header" style="margin-top:24px">
+          <h2>检测到的截屏/录屏软件</h2>
+          <span id="threat-scan-time" style="font-size:12px;color:var(--color-text-muted)"></span>
+        </div>
+        <div class="table-container">
+          <table id="threats-table">
+            <thead>
+              <tr>
+                <th class="col-index">#</th>
+                <th>软件名称</th>
+                <th>进程名</th>
+                <th class="col-pid">PID</th>
+                <th>威胁等级</th>
+                <th>说明</th>
+                <th class="col-status">操作</th>
+              </tr>
+            </thead>
+            <tbody id="threats-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Logs Page -->
+      <div id="page-logs" class="page">
+        <div class="page-header">
+          <h1>日志</h1>
+          <div class="page-actions">
+            <select id="log-filter" class="form-select-sm">
+              <option value="all">全部日志</option>
+              <option value="affinity">防护日志</option>
+              <option value="inject">注入日志</option>
+              <option value="gui">界面日志</option>
+              <option value="monitor">监控日志</option>
+            </select>
+            <button id="btn-refresh-logs" class="btn btn-secondary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
+              刷新
+            </button>
+            <button id="btn-clear-logs" class="btn btn-secondary btn-sm">清空日志</button>
+          </div>
+        </div>
+        <div class="log-container">
+          <pre id="log-content" class="log-content">暂无日志</pre>
+        </div>
+      </div>
+
+      <!-- Settings Page -->
+      <div id="page-settings" class="page">
+        <div class="page-header">
+          <h1>系统设置</h1>
+        </div>
+        <div class="settings-form">
+          <div class="form-group">
+            <label>扫描间隔（毫秒）</label>
+            <input type="number" id="cfg-interval" class="form-input" value="3000" min="500">
+          </div>
+          <div class="form-group">
+            <label>自动启动监控</label>
+            <label class="toggle">
+              <input type="checkbox" id="cfg-auto-start">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="form-group">
+            <label>开机自动启动</label>
+            <label class="toggle">
+              <input type="checkbox" id="cfg-boot-start">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="form-group">
+            <label>关闭窗口时最小化到托盘</label>
+            <label class="toggle">
+              <input type="checkbox" id="cfg-close-to-tray">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="form-group">
+            <label>辅助程序路径</label>
+            <input type="text" id="cfg-helper" class="form-input" value="./bin/screen-guardian-helper.exe">
+          </div>
+          <div class="form-group">
+            <label>规则文件</label>
+            <input type="text" id="cfg-rules" class="form-input" value="./data/rules.json">
+          </div>
+          <div class="form-group">
+            <label>策略文件</label>
+            <input type="text" id="cfg-policy" class="form-input" value="./data/policy-history.json">
+          </div>
+          <div class="form-actions">
+            <button id="btn-reset-config" class="btn btn-secondary">重置</button>
+            <button id="btn-save-config" class="btn btn-primary">保存</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- About Page -->
+      <div id="page-about" class="page">
+        <div class="page-header">
+          <h1>关于</h1>
+        </div>
+        <div class="about-container">
+          <div class="about-logo">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <h2 class="about-name">屏幕守护者</h2>
+          <p class="about-version">v0.2.0</p>
+          <p class="about-desc">在远程会议、屏幕共享日益普及的今天，个人屏幕内容的隐私保护变得尤为重要。屏幕守护者旨在为用户提供轻量、透明的窗口级截屏保护，让你自由选择哪些窗口对截图和录屏不可见，守护屏幕上的每一份隐私。</p>
+          <div class="about-divider"></div>
+          <table class="about-table">
+            <tr><td class="about-label">软件授权</td><td>免费版（Free Edition）</td></tr>
+            <tr><td class="about-label">开发者</td><td>mixyoung</td></tr>
+            <tr><td class="about-label">联系邮箱</td><td>mixyoung@88.com</td></tr>
+            <tr><td class="about-label">技术栈</td><td>Rust + Tauri v2 + WebView2</td></tr>
+            <tr><td class="about-label">系统要求</td><td>Windows 10 1809+</td></tr>
+            <tr><td class="about-label">版权归属</td><td>版权所有 &copy; 2026 mixyoung</td></tr>
+          </table>
+          <div class="about-divider"></div>
+          <p class="about-legal">免费版仅供个人使用。</p>
+        </div>
+      </div>
+    </main>
+    </div><!-- end app-main -->
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <div class="status-bar-left">
+        <span class="status-indicator" id="status-indicator">
+          <span class="status-dot status-stopped"></span>
+          <span id="status-text">监控已停止</span>
+        </span>
+        <span class="status-divider">|</span>
+        <span id="status-protected">已保护 0 个窗口</span>
+        <span class="status-divider">|</span>
+        <span id="status-last-scan">最后扫描: --</span>
+      </div>
+      <div class="status-bar-right">
+        <span id="status-rules">规则: 0</span>
+        <span class="status-divider">|</span>
+        <span>Screen Guardian v0.2.0</span>
+      </div>
+    </div>
+    <div id="toast" class="toast hidden"></div>
+  </div>
+  <script src="main.js"></script>
+</body>
+</html>

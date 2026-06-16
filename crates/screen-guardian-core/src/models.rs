@@ -26,6 +26,8 @@ pub struct WindowInfo {
     pub title: String,
     pub executable_path: String,
     pub is_protected: bool,
+    #[serde(default)]
+    pub window_type: String,
 }
 
 impl WindowInfo {
