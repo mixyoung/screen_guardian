@@ -1,0 +1,16 @@
+[package]
+name = "screen-guardian-hook-dll"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "screen_guardian_hook"
+crate-type = ["cdylib"]
+
+[dependencies]
+windows = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

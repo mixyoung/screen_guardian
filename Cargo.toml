@@ -5,6 +5,7 @@ members = [
   "apps/screen-guardian-helper",
   "apps/screen-guardian-gui",
   "apps/screen-guardian-inject-dll",
+  "apps/screen-guardian-hook-dll",
 ]
 resolver = "2"
 
@@ -34,3 +35,6 @@ windows = { version = "0.58", features = [
   "Win32_System_Diagnostics_Debug",
   "Win32_System_Diagnostics_ToolHelp",
 ] }
+
+[workspace.lints]
+clippy.all = "warn"

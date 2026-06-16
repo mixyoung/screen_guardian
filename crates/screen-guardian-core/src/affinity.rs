@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::os::windows::ffi::OsStrExt;
 
 /// Affinity value for SetWindowDisplayAffinity
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -87,6 +88,68 @@ pub struct ProtectionStats {
     pub native_count: u32,
     pub failure_count: u32,
     pub skip_count: u32,
+}
+
+/// Shared memory structure for hook communication
+#[repr(C)]
+pub struct HookParams {
+    pub hwnd: isize,
+    pub affinity: u32,
+    pub result: i32,
+    pub completed: u32,
+}
+
+/// Find the hook DLL path
+#[cfg(windows)]
+fn find_hook_dll() -> anyhow::Result<Vec<u16>> {
+    // Try to find the DLL in the same directory as the executable
+    let exe_path = std::env::current_exe()?;
+    let exe_dir = exe_path.parent().unwrap_or(std::path::Path::new("."));
+
+    let dll_names = [
+        "screen_guardian_hook.dll",
+        "screen-guardian-hook-dll.dll",
+    ];
+
+    for dll_name in &dll_names {
+        let dll_path = exe_dir.join(dll_name);
+        if dll_path.exists() {
+            let wide: Vec<u16> = dll_path
+                .as_os_str()
+                .encode_wide()
+                .chain(std::iter::once(0))
+                .collect();
+            return Ok(wide);
+        }
+    }
+
+    // Try bin subdirectory
+    let bin_dir = exe_dir.join("bin");
+    for dll_name in &dll_names {
+        let dll_path = bin_dir.join(dll_name);
+        if dll_path.exists() {
+            let wide: Vec<u16> = dll_path
+                .as_os_str()
+                .encode_wide()
+                .chain(std::iter::once(0))
+                .collect();
+            return Ok(wide);
+        }
+    }
+
+    anyhow::bail!("hook DLL not found")
+}
+
+/// Get thread ID for a window
+#[cfg(windows)]
+fn get_window_thread_id(hwnd: isize) -> u32 {
+    use windows::Win32::UI::WindowsAndMessaging::GetWindowThreadProcessId;
+    use windows::Win32::Foundation::HWND;
+
+    let hwnd_obj = HWND(hwnd as *mut _);
+    unsafe {
+        GetWindowThreadProcessId(hwnd_obj, None)
+    }
 }
 
 fn log_affinity(msg: &str) {
@@ -262,17 +325,52 @@ impl AffinityOrchestrator {
         }
     }
 
-    /// Layer 1: SetWindowsHookEx + DLL
+    /// Layer 1: Load DLL and call SetWindowProtection
     #[cfg(windows)]
     fn apply_with_hook_ex(
         &self,
-        _hwnd: isize,
+        hwnd: isize,
         _pid: u32,
-        _affinity: AffinityValue,
+        affinity: AffinityValue,
     ) -> anyhow::Result<()> {
-        // TODO: Implement SetWindowsHookEx + DLL injection
-        // This requires a separate DLL file
-        anyhow::bail!("HookEx not implemented yet")
+        use windows::Win32::System::LibraryLoader::{GetProcAddress, LoadLibraryW};
+
+        // Find the hook DLL path
+        let dll_path = find_hook_dll()?;
+        log_affinity(&format!("hook_ex: loading DLL from {:?}", std::path::Path::new(
+            &String::from_utf16_lossy(&dll_path[..dll_path.len()-1])
+        )));
+
+        unsafe {
+            // Load DLL
+            let dll_module = LoadLibraryW(windows::core::PCWSTR(dll_path.as_ptr()))?;
+
+            if dll_module.is_invalid() {
+                anyhow::bail!("failed to load hook DLL");
+            }
+
+            // Get the SetWindowProtection function
+            let proc_addr = GetProcAddress(
+                dll_module,
+                windows::core::s!("SetWindowProtection"),
+            );
+
+            if let Some(proc) = proc_addr {
+                // Call the function
+                let set_protection: extern "C" fn(isize, u32) -> i32 =
+                    std::mem::transmute(proc);
+                let result = set_protection(hwnd, affinity as u32);
+
+                if result == 0 {
+                    log_affinity("hook_ex: success");
+                    return Ok(());
+                } else {
+                    anyhow::bail!("SetWindowProtection failed with error {}", result);
+                }
+            } else {
+                anyhow::bail!("SetWindowProtection function not found in DLL");
+            }
+        }
     }
 
     /// Layer 2: Shellcode injection
