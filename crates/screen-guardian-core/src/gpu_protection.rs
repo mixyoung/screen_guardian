@@ -356,4 +356,47 @@ impl GpuProtectionManager {
             false
         }
     }
+
+    /// Apply Game Capture protection to a process
+    /// This hooks DirectX/Vulkan Present calls
+    ///
+    /// NOTE: This is a complex operation that requires:
+    /// 1. Injecting a hook DLL into the target process
+    /// 2. Hooking DirectX 9/11/12 or Vulkan Present functions
+    /// 3. Modifying frame buffers before presentation
+    ///
+    /// This is currently a placeholder for future implementation
+    pub fn apply_game_capture_protection(&self, _pid: u32) -> anyhow::Result<()> {
+        if !self.config.enable_d3d_hook {
+            return Ok(());
+        }
+
+        // TODO: Implement Game Capture protection
+        // This would require:
+        // 1. A separate hook DLL with DirectX/Vulkan hooks
+        // 2. DLL injection into the target process
+        // 3. Hooking IDXGISwapChain::Present, IDirect3DDevice9::Present, etc.
+        // 4. Clearing or encrypting frame buffers before presentation
+
+        anyhow::bail!("Game Capture protection not yet implemented")
+    }
+
+    /// Check if a process uses DirectX/Vulkan
+    pub fn detect_graphics_api(&self, process_name: &str) -> Option<String> {
+        let lower = process_name.to_lowercase();
+
+        // Common game/graphics process names
+        let dx_patterns = [
+            "d3d", "direct3d", "dxgi", "vulkan", "opengl",
+            "game", "unity", "unreal", "godot",
+        ];
+
+        for pattern in &dx_patterns {
+            if lower.contains(pattern) {
+                return Some(pattern.to_string());
+            }
+        }
+
+        None
+    }
 }
