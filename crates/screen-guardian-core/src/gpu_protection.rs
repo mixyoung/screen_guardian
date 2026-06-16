@@ -290,4 +290,70 @@ impl GpuProtectionManager {
             .into_iter()
             .find(|app| process_name.to_lowercase().contains(&app.process_name.to_lowercase()))
     }
+
+    /// Apply WGC protection to a window
+    /// This uses Windows.Graphics.Capture API protection
+    #[cfg(windows)]
+    pub fn apply_wgc_protection(&self, hwnd: isize) -> anyhow::Result<()> {
+        use windows::Win32::{
+            Foundation::HWND,
+            UI::WindowsAndMessaging::{
+                SetWindowDisplayAffinity, WINDOW_DISPLAY_AFFINITY,
+            },
+        };
+
+        if !self.config.enable_wgc_protection {
+            return Ok(());
+        }
+
+        let hwnd_obj = HWND(hwnd as *mut _);
+
+        // WDA_EXCLUDEFROMCAPTURE (0x11) works with Windows Graphics Capture API
+        // This makes the window invisible to WGC-based capture tools
+        unsafe {
+            let result = SetWindowDisplayAffinity(
+                hwnd_obj,
+                WINDOW_DISPLAY_AFFINITY(0x11), // WDA_EXCLUDEFROMCAPTURE
+            );
+
+            if result.is_ok() {
+                return Ok(());
+            }
+
+            // Fallback to WDA_MONITOR
+            let result2 = SetWindowDisplayAffinity(
+                hwnd_obj,
+                WINDOW_DISPLAY_AFFINITY(0x01), // WDA_MONITOR
+            );
+
+            if result2.is_ok() {
+                return Ok(());
+            }
+
+            anyhow::bail!("WGC protection failed")
+        }
+    }
+
+    /// Get WGC protection status for a window
+    #[cfg(windows)]
+    pub fn get_wgc_status(&self, hwnd: isize) -> bool {
+        use windows::Win32::{
+            Foundation::HWND,
+            UI::WindowsAndMessaging::GetWindowDisplayAffinity,
+        };
+
+        let hwnd_obj = HWND(hwnd as *mut _);
+
+        unsafe {
+            let mut affinity: u32 = 0;
+            let result = GetWindowDisplayAffinity(hwnd_obj, &mut affinity);
+
+            if result.is_ok() {
+                // Check if WDA_EXCLUDEFROMCAPTURE (0x11) or WDA_MONITOR (0x01) is set
+                return affinity == 0x11 || affinity == 0x01;
+            }
+
+            false
+        }
+    }
 }
