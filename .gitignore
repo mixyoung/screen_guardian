@@ -1,0 +1,39 @@
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Tauri generated
+gen/
+
+# Data files (keep structure, ignore content)
+data/*.json
+!data/.gitkeep
+
+# Source code directories (not included in this release)
+screen-guardian-cli/
+screen-guardian-core/
+screen-guardian-helper/
+screen-guardian-hook-dll/
+screen-guardian-inject-dll/
+screen-guardian-gui/src/
+screen-guardian-gui/build.rs
+screen-guardian-gui/Cargo.toml
+
+# Rust build artifacts
+target/
+Cargo.lock
+Cargo.toml
