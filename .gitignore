@@ -37,3 +37,5 @@ screen-guardian-gui/Cargo.toml
 target/
 Cargo.lock
 Cargo.toml
+# Runtime data (monitor flags etc.)
+bin/data/
