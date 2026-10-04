@@ -19,9 +19,9 @@ desktop.ini
 # Tauri generated
 gen/
 
-# Data files (keep structure, ignore content)
-data/*.json
-!data/.gitkeep
+# Data files (config.json is a release asset; runtime data ignored)
+data/*
+!data/config.json
 
 # Source code directories (not included in this release)
 screen-guardian-cli/

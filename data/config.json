@@ -1,0 +1,10 @@
+{
+  "poll_interval_ms": 3000,
+  "auto_start_monitoring": false,
+  "boot_auto_start": false,
+  "close_to_tray": true,
+  "rules_path": "./data/rules.json",
+  "policy_path": "./data/policy-history.json",
+  "helper_path": "./bin/screen-guardian-helper.exe",
+  "license_path": "./data/license.json"
+}

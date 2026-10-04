@@ -1,0 +1,4 @@
+#!/bin/sh
+# sgcli - Screen Guardian CLI launcher (POSIX shells: Git Bash / WSL)
+cd "$(dirname "$0")/.." || exit 1
+exec "bin/screen-guardian-cli.exe" "$@"

@@ -1,0 +1,3 @@
+# Launcher line endings: sh shim must stay LF, cmd shim must stay CRLF
+bin/sgcli text eol=lf
+*.cmd text eol=crlf
