@@ -29,9 +29,7 @@ screen-guardian-core/
 screen-guardian-helper/
 screen-guardian-hook-dll/
 screen-guardian-inject-dll/
-screen-guardian-gui/src/
-screen-guardian-gui/build.rs
-screen-guardian-gui/Cargo.toml
+screen-guardian-gui/
 
 # Rust build artifacts
 target/

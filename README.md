@@ -53,7 +53,9 @@ screen-guardian/
 │   └── screen_guardian_hook.dll   # Hook DLL
 ├── data/                          # 配置与运行数据
 │   └── config.json                # 配置文件（rules/license 等运行时自动生成）
-├── screen-guardian-gui/           # GUI 前端资源与 Tauri 配置
+├── resources/                     # 静态程序资产（图标与前端 UI 资源）
+│   ├── icons/                     # 应用各尺寸图标（.ico, .png, .icns）
+│   └── ui/                        # 前端静态 Web 页面资源（HTML / CSS / JS）
 ├── LICENSE.md                     # 授权协议
 └── README.md                      # 本文件
 ```
