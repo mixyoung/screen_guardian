@@ -6,5 +6,7 @@
   "rules_path": "./data/rules.json",
   "policy_path": "./data/policy-history.json",
   "helper_path": "./bin/screen-guardian-helper.exe",
-  "license_path": "./data/license.json"
+  "license_path": "./data/license.json",
+  "telemetry_enabled": false,
+  "telemetry_url": "https://api.screen-guardian.com/api/v1/telemetry"
 }

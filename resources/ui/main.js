@@ -27,6 +27,9 @@ navItems.forEach(item => {
     item.classList.add('active');
     document.getElementById('page-' + page).classList.add('active');
 
+    // 匿名页面浏览埋点（后端未启用遥测时为空操作）
+    invoke('track_event', { name: 'page_view', properties: { page: page } }).catch(function() {});
+
     if (page === 'windows') loadWindows();
     if (page === 'rules') loadRules();
     if (page === 'audit') loadAuditPage();
@@ -674,6 +677,8 @@ document.getElementById('btn-clear-logs').addEventListener('click', async functi
 });
 
 // --- Settings Page ---
+var lastLoadedTelemetryUrl = '';
+
 async function loadConfig() {
   try {
     var cfg = await invoke('get_config');
@@ -681,11 +686,13 @@ async function loadConfig() {
     document.getElementById('cfg-auto-start').checked = cfg.auto_start_monitoring;
     document.getElementById('cfg-boot-start').checked = cfg.boot_auto_start;
     document.getElementById('cfg-close-to-tray').checked = cfg.close_to_tray;
+    document.getElementById('cfg-telemetry').checked = !!cfg.telemetry_enabled;
+    lastLoadedTelemetryUrl = cfg.telemetry_url || '';
     document.getElementById('cfg-helper').value = cfg.helper_path;
     document.getElementById('cfg-rules').value = cfg.rules_path;
     document.getElementById('cfg-policy').value = cfg.policy_path;
   } catch (e) {
-    showToast('加载配置失败: ' + String(e), 'error');
+    showToast('加载配置失败： ' + String(e), 'error');
   }
 }
 
@@ -695,6 +702,8 @@ document.getElementById('btn-save-config').addEventListener('click', async funct
     auto_start_monitoring: document.getElementById('cfg-auto-start').checked,
     boot_auto_start: document.getElementById('cfg-boot-start').checked,
     close_to_tray: document.getElementById('cfg-close-to-tray').checked,
+    telemetry_enabled: document.getElementById('cfg-telemetry').checked,
+    telemetry_url: lastLoadedTelemetryUrl,
     helper_path: document.getElementById('cfg-helper').value,
     rules_path: document.getElementById('cfg-rules').value,
     policy_path: document.getElementById('cfg-policy').value
@@ -703,7 +712,7 @@ document.getElementById('btn-save-config').addEventListener('click', async funct
     await invoke('update_config', { newConfig: cfg });
     showToast('配置已保存', 'success');
   } catch (e) {
-    showToast('保存失败: ' + String(e), 'error');
+    showToast('保存失败： ' + String(e), 'error');
   }
 });
 

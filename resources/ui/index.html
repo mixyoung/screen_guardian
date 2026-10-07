@@ -425,6 +425,13 @@
             </label>
           </div>
           <div class="form-group">
+            <label>匿名遥测（默认关闭，仅采集事件名与版本信息用于改进产品，不含窗口标题等任何个人数据）</label>
+            <label class="toggle">
+              <input type="checkbox" id="cfg-telemetry">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="form-group">
             <label>辅助程序路径</label>
             <input type="text" id="cfg-helper" class="form-input" value="./bin/screen-guardian-helper.exe">
           </div>
@@ -610,7 +617,7 @@
             </svg>
           </div>
           <h2 class="about-name">屏幕守护者</h2>
-          <p class="about-version">v0.4.1</p>
+          <p class="about-version">v0.4.2</p>
           <p class="about-desc">在远程会议、屏幕共享日益普及的今天，个人屏幕内容的隐私保护变得尤为重要。屏幕守护者旨在为用户提供轻量、透明的窗口级截屏保护，让你自由选择哪些窗口对截图和录屏不可见，守护屏幕上的每一份隐私。</p>
           <div class="about-divider"></div>
           <table class="about-table">
@@ -642,7 +649,7 @@
       <div class="status-bar-right">
         <span id="status-rules">规则: 0</span>
         <span class="status-divider">|</span>
-        <span>Screen Guardian v0.4.1</span>
+        <span>Screen Guardian v0.4.2</span>
       </div>
     </div>
     <div id="toast" class="toast hidden"></div>
